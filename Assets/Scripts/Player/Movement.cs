@@ -4,42 +4,33 @@ using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
-    private CharacterController _controller;
-    private Vector3 _playerVelocity;
-    private bool _groundedPlayer;
+    private Vector3 mousePos;
+    private Vector3 worldPos;
 
-    public float playerSpeed = 2.0f;
-    public float jumpHeight = 1.0f;
-    public float gravityValue = -9.81f;
-
-    private void Start()
-    {
-        _controller = gameObject.AddComponent<CharacterController>();
-    }
+    public GameObject clickParticle;
 
     void Update()
     {
-        _groundedPlayer = _controller.isGrounded;
-        if (_groundedPlayer && _playerVelocity.y < 0)
+        if (Input.GetMouseButton(0))
         {
-            _playerVelocity.y = 0f;
+            Debug.Log("Left Mouse Clicked");
+            mousePos = Input.mousePosition;
+            mousePos.z = 1.5f;
+            worldPos = GetComponent<Camera>().ScreenToWorldPoint(mousePos);
+            StartCoroutine(SpawnClickImpulse());
         }
+    }
 
-        Vector3 move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        _controller.Move(move * Time.deltaTime * playerSpeed);
-
-        if (move != Vector3.zero)
+    IEnumerator SpawnClickImpulse()
+    {
+        yield return StartCoroutine("InstantiateClickImpulse", () =>
         {
-            gameObject.transform.forward = move;
-        }
+            Debug.Log("Enemy unfrozen");
+        }));
+    }
 
-        // Changes the height position of the player..
-        if (Input.GetButtonDown("Jump") && _groundedPlayer)
-        {
-            _playerVelocity.y += Mathf.Sqrt(jumpHeight * -3.0f * gravityValue);
-        }
-
-        _playerVelocity.y += gravityValue * Time.deltaTime;
-        _controller.Move(_playerVelocity * Time.deltaTime);
+    IEnumerator InstantiateClickImpulse()
+    {
+        yield return Instantiate(clickParticle, worldPos, Quaternion.identity);
     }
 }
